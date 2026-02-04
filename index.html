@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סידור עבודה שבועי - בחירת משתמש</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #34495e;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .link-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .link-card.employee {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: #0b2b36;
+        }
+        .link-card.manager {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .link-card.dept {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #2c3e50;
+        }
+        .link-card.admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .emoji {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .role-badge {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 סידור עבודה שבועי</h1>
+        <p class="subtitle">בחר את המשתמש שלך כדי להיכנס למערכת</p>
+        
+        <div class="section">
+            <h2>👥 עובדים</h2>
+            <div class="links">
+                <a href="work_schedule.html?user=emp1&name=יוסי מזרחי" class="link-card employee">
+                    <span class="emoji">👤</span>
+                    יוסי מזרחי
+                </a>
+                <a href="work_schedule.html?user=emp2&name=מיכל דהן" class="link-card employee">
+                    <span class="emoji">👤</span>
+                    מיכל דהן
+                </a>
+                <a href="work_schedule.html?user=emp3&name=אבי שמש" class="link-card employee">
+                    <span class="emoji">👤</span>
+                    אבי שמש
+                </a>
+                <a href="work_schedule.html?user=emp4&name=נועה ברק" class="link-card employee">
+                    <span class="emoji">👤</span>
+                    נועה ברק
+                </a>
+                <a href="work_schedule.html?user=emp5&name=עומר גולן" class="link-card employee">
+                    <span class="emoji">👤</span>
+                    עומר גולן
+                </a>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>👨‍💼 מנהלים</h2>
+            <div class="links">
+                <a href="work_schedule.html?user=manager1&name=דני כהן&role=manager" class="link-card manager">
+                    <span class="emoji">👔</span>
+                    דני כהן
+                    <div class="role-badge">מנהל צוות</div>
+                </a>
+                <a href="work_schedule.html?user=manager2&name=שרה לוי&role=manager" class="link-card manager">
+                    <span class="emoji">👔</span>
+                    שרה לוי
+                    <div class="role-badge">מנהלת צוות</div>
+                </a>
+                <a href="work_schedule.html?user=dept_manager&name=רונית אברהם&role=dept_manager" class="link-card dept">
+                    <span class="emoji">👩‍💼</span>
+                    רונית אברהם
+                    <div class="role-badge">מנהלת אגף</div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>⚙️ ניהול</h2>
+            <div class="links">
+                <a href="work_schedule.html?user=admin&name=מנהל מערכת&role=admin" class="link-card admin">
+                    <span class="emoji">🔧</span>
+                    מנהל מערכת
+                    <div class="role-badge">גישה מלאה</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
