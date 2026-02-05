@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>סידור עבודה שבועי</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 50px auto;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .login-container h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+    .login-container .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 25px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50; }
+    .form-group select, .form-group input {
+      width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;
+    }
+    .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; }
+    .password-field { display: none; }
+    .password-field.show { display: block; }
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: bold; cursor: pointer; color: white;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .btn:hover { opacity: 0.9; }
+    .error-msg { color: #e74c3c; text-align: center; margin-top: 10px; display: none; }
+
+    .app-container { display: none; max-width: 900px; margin: 0 auto; }
+    .app-container.active { display: block; }
+    
+    .header {
+      background: white; border-radius: 15px; padding: 15px 20px;
+      margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .header h1 { font-size: 20px; color: #2c3e50; }
+    .user-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .user-badge {
+      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white;
+    }
+    .user-badge.employee { background: #3498db; }
+    .user-badge.manager { background: #e74c3c; }
+    .user-badge.admin { background: #2c3e50; }
+    .btn-small {
+      padding: 8px 15px; font-size: 12px; border-radius: 8px; border: none;
+      cursor: pointer; background: #ecf0f1; color: #2c3e50; font-weight: bold;
+    }
+    .btn-small:hover { background: #bdc3c7; }
+    .btn-small.admin-btn { background: #9b59b6; color: white; }
+    .btn-small.admin-btn:hover { background: #8e44ad; }
+
+    .week-nav {
+      background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 10px;
+    }
+    .week-nav button {
+      padding: 10px 20px; border: none; border-radius: 10px; font-weight: bold;
+      cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    }
+    .week-title { font-weight: bold; color: #2c3e50; text-align: center; }
+
+    .schedule-card {
+      background: white; border-radius: 15px; padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+      margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 10px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: bold;
+    }
+    .legend-color {
+      width: 20px; height: 20px; border-radius: 5px;
+    }
+    
+    .employee-row {
+      background: #f8f9fa;
+      border: 1px solid #ecf0f1;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .employee-row.is-me {
+      background: #e8f5e9;
+      border-color: #4caf50;
+    }
+    .employee-header {
+      font-weight: bold;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-bottom: 1px solid #ecf0f1;
+    }
+    .employee-days {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      padding: 8px;
+    }
+    .day-cell {
+      text-align: center;
+    }
+    .day-label {
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .day-select {
+      width: 100%;
+      padding: 10px 4px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    .day-select:disabled { cursor: not-allowed; opacity: 0.8; }
+    .day-select.empty { background-color: #e0e0e0; color: #999; }
+    .day-select.office { background-color: #2196f3; color: white; }
+    .day-select.home { background-color: #ff9800; color: white; }
+    .day-select.vacation { background-color: #4caf50; color: white; }
+    .day-select.other { background-color: #9c27b0; color: white; }
+    
+    .other-input {
+      width: 100%;
+      margin-top: 4px;
+      padding: 6px;
+      border: 2px solid #9c27b0;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+    
+    .note-row {
+      padding: 8px;
+      border-top: 1px dashed #ddd;
+    }
+    .note-input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #9c27b0;
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: right;
+      background: #f3e5f5;
+    }
+    .note-input:disabled {
+      background: #f5f5f5;
+      opacity: 0.8;
+    }
+
+    .status {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      padding: 10px 25px; border-radius: 25px; color: white; font-weight: bold;
+      display: none; z-index: 1000;
+    }
+    .status.saving { background: #f39c12; display: block; }
+    .status.saved { background: #27ae60; display: block; }
+    .status.error { background: #e74c3c; display: block; }
+    .status.offline { background: #95a5a6; display: block; }
+
+    .loading {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; justify-content: center; align-items: center; z-index: 2000;
+    }
+    .loading.show { display: flex; }
+    .loading-box { background: white; padding: 30px; border-radius: 15px; text-align: center; }
+    .spinner {
+      width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #667eea;
+      border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal for admin */
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; justify-content: center; align-items: center; z-index: 3000; padding: 20px;
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      background: white; border-radius: 15px; padding: 25px; max-width: 500px; width: 100%;
+    }
+    .modal h2 { margin-bottom: 20px; color: #2c3e50; }
+    .employee-list { margin-bottom: 20px; }
+    .employee-item {
+      display: flex; gap: 10px; align-items: center; margin-bottom: 10px;
+      padding: 10px; background: #f8f9fa; border-radius: 8px;
+    }
+    .employee-item input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+    .employee-item button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .btn-delete { background: #e74c3c; color: white; }
+    .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancel { background: #95a5a6; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-save { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div class="login-container" id="loginScreen">
+    <h1>📅 סידור עבודה</h1>
+    <p class="subtitle">בחר את שמך כדי להיכנס</p>
+    
+    <div class="form-group">
+      <label>שם העובד:</label>
+      <select id="employeeSelect"></select>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="isManagerCheck">
+      <label for="isManagerCheck">כניסה כמנהל / מנהל מערכת</label>
+    </div>
+
+    <div class="form-group password-field" id="passwordField">
+      <label>סיסמה:</label>
+      <input type="password" id="passwordInput" placeholder="הקלד סיסמה">
+    </div>
+
+    <button class="btn" id="loginBtn">כניסה למערכת</button>
+    <p class="error-msg" id="errorMsg">סיסמה שגויה</p>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-container" id="appContainer">
+    <div class="header">
+      <div class="header-top">
+        <h1>📅 סידור עבודה שבועי</h1>
+        <div class="user-info">
+          <span id="userName">-</span>
+          <span class="user-badge" id="userBadge">עובד</span>
+          <button class="btn-small admin-btn" id="manageEmployeesBtn" style="display:none;">ניהול עובדים</button>
+          <button class="btn-small" id="downloadImageBtn" style="display:none; background:#27ae60; color:white;">📷 הורד תמונה</button>
+          <button class="btn-small" id="logoutBtn">החלף משתמש</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="week-nav">
+      <button id="prevWeek">→ שבוע קודם</button>
+      <span class="week-title" id="weekTitle">-</span>
+      <button id="nextWeek">שבוע הבא ←</button>
+    </div>
+
+    <div class="schedule-card">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#2196f3;"></div><span>משרד</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#ff9800;"></div><span>בית</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#4caf50;"></div><span>חופש</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#9c27b0;"></div><span>אחר</span></div>
+      </div>
+      <div id="scheduleBody"></div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status" id="status"></div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div>טוען...</div>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div class="modal" id="adminModal">
+    <div class="modal-content">
+      <h2>ניהול עובדים</h2>
+      <div class="employee-list" id="employeeList"></div>
+      <button class="btn-small" id="addEmployeeBtn" style="margin-bottom:20px;">+ הוסף עובד</button>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="cancelModal">ביטול</button>
+        <button class="btn-save" id="saveEmployees">שמור</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    // ========== הגדרות ==========
+    const API_URL = "https://script.google.com/macros/s/AKfycbxEP8rmj7O_xzR646TTsumT6bCi4mE8FuDQXRY8jKnfNd56ycZhfSkdVdAY8bkHtY4uPg/exec";
+    
+    const PASSWORDS = {
+      manager: "1234",
+      admin: "admin123"
+    };
+
+    const DEFAULT_EMPLOYEES = {
+      emp1: "יוסי מזרחי",
+      emp2: "מיכל דהן",
+      emp3: "אבי שמש",
+      emp4: "נועה ברק",
+      emp5: "עומר גולן"
+    };
+
+    const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday"];
+    const DAY_NAMES = ["א'", "ב'", "ג'", "ד'", "ה'"];
+
+    // ========== משתנים גלובליים ==========
+    let currentUser = null;
+    let currentWeekOffset = 0;
+    let EMPLOYEES = {};
+    let allScheduleData = {}; // כל הנתונים - נשמר ב-localStorage
+
+    // ========== אלמנטים ==========
+    const $ = id => document.getElementById(id);
+    const loginScreen = $("loginScreen");
+    const appContainer = $("appContainer");
+    const employeeSelect = $("employeeSelect");
+    const isManagerCheck = $("isManagerCheck");
+    const passwordField = $("passwordField");
+    const passwordInput = $("passwordInput");
+    const loginBtn = $("loginBtn");
+    const errorMsg = $("errorMsg");
+    const userName = $("userName");
+    const userBadge = $("userBadge");
+    const logoutBtn = $("logoutBtn");
+    const weekTitle = $("weekTitle");
+    const scheduleBody = $("scheduleBody");
+    const statusEl = $("status");
+    const loadingEl = $("loading");
+    const manageEmployeesBtn = $("manageEmployeesBtn");
+    const downloadImageBtn = $("downloadImageBtn");
+    const adminModal = $("adminModal");
+
+    // ========== אתחול ==========
+    function init() {
+      loadEmployees();
+      loadAllScheduleData();
+      populateEmployeeSelect();
+      
+      const saved = localStorage.getItem("schedule_user");
+      if (saved) {
+        try {
+          currentUser = JSON.parse(saved);
+          if (EMPLOYEES[currentUser.key]) {
+            showApp();
+          } else {
+            localStorage.removeItem("schedule_user");
+          }
+        } catch (e) {
+          localStorage.removeItem("schedule_user");
+        }
+      }
+
+      // אירועים
+      isManagerCheck.addEventListener("change", () => {
+        passwordField.classList.toggle("show", isManagerCheck.checked);
+        errorMsg.style.display = "none";
+      });
+
+      loginBtn.addEventListener("click", handleLogin);
+      logoutBtn.addEventListener("click", handleLogout);
+      $("prevWeek").addEventListener("click", () => changeWeek(-1));
+      $("nextWeek").addEventListener("click", () => changeWeek(1));
+      manageEmployeesBtn.addEventListener("click", openAdminModal);
+      downloadImageBtn.addEventListener("click", downloadAsImage);
+      $("cancelModal").addEventListener("click", closeAdminModal);
+      $("saveEmployees").addEventListener("click", saveEmployeesFromModal);
+      $("addEmployeeBtn").addEventListener("click", addEmployeeRow);
+    }
+
+    // ========== ניהול עובדים ==========
+    function loadEmployees() {
+      const saved = localStorage.getItem("schedule_employees");
+      if (saved) {
+        try {
+          EMPLOYEES = JSON.parse(saved);
+        } catch (e) {
+          EMPLOYEES = { ...DEFAULT_EMPLOYEES };
+        }
+      } else {
+        EMPLOYEES = { ...DEFAULT_EMPLOYEES };
+      }
+    }
+
+    function saveEmployees() {
+      localStorage.setItem("schedule_employees", JSON.stringify(EMPLOYEES));
+    }
+
+    function populateEmployeeSelect() {
+      employeeSelect.innerHTML = '<option value="">-- בחר --</option>';
+      Object.keys(EMPLOYEES).forEach(key => {
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = EMPLOYEES[key];
+        employeeSelect.appendChild(opt);
+      });
+    }
+
+    // ========== שמירת כל הנתונים ב-localStorage ==========
+    function loadAllScheduleData() {
+      const saved = localStorage.getItem("schedule_all_data");
+      if (saved) {
+        try {
+          allScheduleData = JSON.parse(saved);
+        } catch (e) {
+          allScheduleData = {};
+        }
+      }
+    }
+
+    function saveAllScheduleData() {
+      localStorage.setItem("schedule_all_data", JSON.stringify(allScheduleData));
+    }
+
+    function getWeekData(weekKey) {
+      if (!allScheduleData[weekKey]) {
+        allScheduleData[weekKey] = {};
+      }
+      return allScheduleData[weekKey];
+    }
+
+    // ========== התחברות ==========
+    function handleLogin() {
+      const empKey = employeeSelect.value;
+      if (!empKey) {
+        alert("יש לבחור עובד");
+        return;
+      }
+
+      let role = "employee";
+      
+      if (isManagerCheck.checked) {
+        const pwd = passwordInput.value;
+        if (pwd === PASSWORDS.admin) {
+          role = "admin";
+        } else if (pwd === PASSWORDS.manager) {
+          role = "manager";
+        } else {
+          errorMsg.style.display = "block";
+          return;
+        }
+      }
+
+      currentUser = { key: empKey, name: EMPLOYEES[empKey], role: role };
+      localStorage.setItem("schedule_user", JSON.stringify(currentUser));
+      showApp();
+    }
+
+    function handleLogout() {
+      localStorage.removeItem("schedule_user");
+      currentUser = null;
+      loginScreen.style.display = "block";
+      appContainer.classList.remove("active");
+      employeeSelect.value = "";
+      isManagerCheck.checked = false;
+      passwordField.classList.remove("show");
+      passwordInput.value = "";
+      errorMsg.style.display = "none";
+    }
+
+    function showApp() {
+      loginScreen.style.display = "none";
+      appContainer.classList.add("active");
+      
+      userName.textContent = currentUser.name;
+      
+      if (currentUser.role === "admin") {
+        userBadge.textContent = "מנהל מערכת";
+        userBadge.className = "user-badge admin";
+        manageEmployeesBtn.style.display = "inline-block";
+        downloadImageBtn.style.display = "inline-block";
+      } else if (currentUser.role === "manager") {
+        userBadge.textContent = "מנהל";
+        userBadge.className = "user-badge manager";
+        manageEmployeesBtn.style.display = "none";
+        downloadImageBtn.style.display = "inline-block";
+      } else {
+        userBadge.textContent = "עובד";
+        userBadge.className = "user-badge employee";
+        manageEmployeesBtn.style.display = "none";
+        downloadImageBtn.style.display = "inline-block";
+      }
+
+      updateWeekDisplay();
+      loadWeekData();
+    }
+
+    // ========== ניווט שבועות ==========
+    function getWeekDates(offset) {
+      const today = new Date();
+      const sunday = new Date(today);
+      sunday.setDate(today.getDate() - today.getDay() + (offset * 7));
+      const dates = [];
+      for (let i = 0; i < 5; i++) {
+        const d = new Date(sunday);
+        d.setDate(sunday.getDate() + i);
+        dates.push(d);
+      }
+      return dates;
+    }
+
+    function getWeekKey(offset) {
+      const dates = getWeekDates(offset);
+      const s = dates[0];
+      return `${s.getFullYear()}-${s.getMonth() + 1}-${s.getDate()}`;
+    }
+
+    function formatDate(d) {
+      return `${d.getDate()}/${d.getMonth() + 1}`;
+    }
+
+    function updateWeekDisplay() {
+      const dates = getWeekDates(currentWeekOffset);
+      const start = formatDate(dates[0]);
+      const end = formatDate(dates[4]);
+      
+      let title = `${start} - ${end}`;
+      if (currentWeekOffset === 0) title = `השבוע הנוכחי (${title})`;
+      else if (currentWeekOffset === 1) title = `שבוע הבא (${title})`;
+      else if (currentWeekOffset === -1) title = `שבוע שעבר (${title})`;
+      
+      weekTitle.textContent = title;
+    }
+
+    function changeWeek(delta) {
+      currentWeekOffset += delta;
+      updateWeekDisplay();
+      loadWeekData();
+    }
+
+    // ========== טעינת נתונים ==========
+    async function loadWeekData() {
+      const weekKey = getWeekKey(currentWeekOffset);
+      const weekData = getWeekData(weekKey);
+      
+      // רינדור מיידי מה-cache
+      renderTable(weekData);
+      
+      // טעינה מהשרת ברקע
+      try {
+        const response = await fetch(`${API_URL}?action=loadWeek&week_key=${encodeURIComponent(weekKey)}`);
+        const data = await response.json();
+        
+        if (data.success && data.requests) {
+          // עדכון ה-cache עם נתונים מהשרת
+          data.requests.forEach(req => {
+            const empKey = req.employee_key;
+            const dayKey = req.day_key;
+            if (!weekData[empKey]) weekData[empKey] = {};
+            weekData[empKey][dayKey] = req.choice_value || "";
+          });
+          
+          saveAllScheduleData();
+          renderTable(weekData);
+        }
+      } catch (e) {
+        console.log("Offline mode - using cached data");
+        showStatus("offline", "מצב לא מקוון - משתמש בנתונים שמורים");
+      }
+    }
+
+    // ========== רינדור טבלה ==========
+    function renderTable(weekData) {
+      const container = scheduleBody;
+      container.innerHTML = "";
+      
+      const dates = getWeekDates(currentWeekOffset);
+      
+      Object.keys(EMPLOYEES).forEach(empKey => {
+        const row = document.createElement("div");
+        row.className = "employee-row";
+        if (empKey === currentUser.key) {
+          row.classList.add("is-me");
+        }
+        
+        // שם העובד
+        const header = document.createElement("div");
+        header.className = "employee-header";
+        header.textContent = EMPLOYEES[empKey] + (empKey === currentUser.key ? " (אני)" : "");
+        row.appendChild(header);
+        
+        // ימים
+        const daysContainer = document.createElement("div");
+        daysContainer.className = "employee-days";
+        
+        let hasOther = false;
+        let otherDayIdx = -1;
+        let otherText = "";
+        
+        DAYS.forEach((day, idx) => {
+          const dayCell = document.createElement("div");
+          dayCell.className = "day-cell";
+          dayCell.dataset.dayIdx = idx;
+          
+          // תווית יום
+          const dayLabel = document.createElement("div");
+          dayLabel.className = "day-label";
+          dayLabel.textContent = DAY_NAMES[idx] + " " + formatDate(dates[idx]);
+          dayCell.appendChild(dayLabel);
+          
+          // בחירה
+          const select = document.createElement("select");
+          select.className = "day-select";
+          select.dataset.emp = empKey;
+          select.dataset.day = day;
+          
+          const currentValue = (weekData[empKey] && weekData[empKey][day]) || "";
+          const currentOther = (weekData[empKey] && weekData[empKey][day + "_other"]) || "";
+          const isOwnRow = empKey === currentUser.key;
+          const isEmpty = currentValue === "";
+          
+          const canEdit = currentUser.role === "admin" || 
+                          currentUser.role === "manager" || 
+                          (isOwnRow && isEmpty);
+          
+          select.disabled = !canEdit;
+          
+          const options = [
+            { value: "", label: "—", cls: "empty" },
+            { value: "office", label: "משרד", cls: "office" },
+            { value: "home", label: "בית", cls: "home" },
+            { value: "vacation", label: "חופש", cls: "vacation" },
+            { value: "other", label: "אחר", cls: "other" }
+          ];
+          
+          options.forEach(opt => {
+            const o = document.createElement("option");
+            o.value = opt.value;
+            o.textContent = opt.label;
+            select.appendChild(o);
+          });
+          
+          select.value = currentValue;
+          select.classList.add(options.find(o => o.value === currentValue)?.cls || "empty");
+          
+          select.addEventListener("change", (e) => handleCellChange(e, empKey, day, row, canEdit));
+          
+          dayCell.appendChild(select);
+          daysContainer.appendChild(dayCell);
+          
+          // בדיקה אם יש "אחר"
+          if (currentValue === "other") {
+            hasOther = true;
+            otherDayIdx = idx;
+            otherText = currentOther;
+          }
+        });
+        
+        row.appendChild(daysContainer);
+        
+        // שורת הערה אם יש "אחר"
+        if (hasOther) {
+          const noteRow = document.createElement("div");
+          noteRow.className = "note-row";
+          
+          const isOwnRow = empKey === currentUser.key;
+          const canEdit = currentUser.role === "admin" || 
+                          currentUser.role === "manager" || 
+                          isOwnRow;
+          
+          const noteInput = document.createElement("input");
+          noteInput.type = "text";
+          noteInput.className = "note-input";
+          noteInput.placeholder = "הערה...";
+          noteInput.value = otherText;
+          noteInput.disabled = !canEdit;
+          noteInput.dataset.emp = empKey;
+          noteInput.dataset.day = DAYS[otherDayIdx];
+          noteInput.addEventListener("blur", (e) => handleOtherChange(e, empKey, DAYS[otherDayIdx]));
+          
+          noteRow.appendChild(noteInput);
+          row.appendChild(noteRow);
+        }
+        
+        container.appendChild(row);
+      });
+    }
+
+    // ========== שמירת תא ==========
+    async function handleCellChange(e, empKey, day, employeeRow, canEdit) {
+      const select = e.target;
+      const value = select.value;
+      const weekKey = getWeekKey(currentWeekOffset);
+      
+      // עדכון צבע
+      select.className = "day-select " + (value ? value : "empty");
+      
+      // שמירה מקומית מיידית
+      const weekData = getWeekData(weekKey);
+      if (!weekData[empKey]) weekData[empKey] = {};
+      weekData[empKey][day] = value;
+      
+      // הסרת הערה קודמת אם לא "אחר"
+      if (value !== "other") {
+        weekData[empKey][day + "_other"] = "";
+      }
+      
+      saveAllScheduleData();
+      
+      // רענון שורת ההערה
+      const existingNote = employeeRow.querySelector(".note-row");
+      if (value === "other" && !existingNote) {
+        const noteRow = document.createElement("div");
+        noteRow.className = "note-row";
+        
+        const noteInput = document.createElement("input");
+        noteInput.type = "text";
+        noteInput.className = "note-input";
+        noteInput.placeholder = "הערה...";
+        noteInput.disabled = !canEdit;
+        noteInput.dataset.emp = empKey;
+        noteInput.dataset.day = day;
+        noteInput.addEventListener("blur", (e) => handleOtherChange(e, empKey, day));
+        
+        noteRow.appendChild(noteInput);
+        employeeRow.appendChild(noteRow);
+        noteInput.focus();
+      } else if (value !== "other" && existingNote) {
+        // בדוק אם עדיין יש "אחר" באחד הימים
+        let stillHasOther = false;
+        DAYS.forEach(d => {
+          if (weekData[empKey][d] === "other") stillHasOther = true;
+        });
+        if (!stillHasOther) {
+          existingNote.remove();
+        }
+      }
+      
+      showStatus("saved", "נשמר ✓");
+      
+      // שמירה לשרת ברקע
+      saveToServer(empKey, day, value, weekData[empKey][day + "_other"] || "");
+    }
+    
+    async function handleOtherChange(e, empKey, day) {
+      const input = e.target;
+      const value = input.value;
+      const weekKey = getWeekKey(currentWeekOffset);
+      
+      const weekData = getWeekData(weekKey);
+      if (!weekData[empKey]) weekData[empKey] = {};
+      weekData[empKey][day + "_other"] = value;
+      saveAllScheduleData();
+      
+      showStatus("saved", "נשמר ✓");
+      
+      // שמירה לשרת
+      saveToServer(empKey, day, weekData[empKey][day], value);
+    }
+    
+    async function saveToServer(empKey, day, choiceValue, choiceOther) {
+      const weekKey = getWeekKey(currentWeekOffset);
+      
+      try {
+        const payload = {
+          employee_key: empKey,
+          employee_name: EMPLOYEES[empKey],
+          week_key: weekKey,
+          day_key: day,
+          choice_value: choiceValue,
+          choice_other: choiceOther,
+          updated_by: currentUser.key,
+          updated_by_name: currentUser.name
+        };
+        
+        const response = await fetch(`${API_URL}?action=upsertCell`, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          console.log("Saved to server");
+        }
+      } catch (e) {
+        console.log("Failed to save to server");
+      }
+    }
+
+    // ========== Admin Modal ==========
+    function openAdminModal() {
+      const list = $("employeeList");
+      list.innerHTML = "";
+      
+      Object.keys(EMPLOYEES).forEach(key => {
+        addEmployeeRowToModal(key, EMPLOYEES[key]);
+      });
+      
+      adminModal.classList.add("show");
+    }
+
+    function closeAdminModal() {
+      adminModal.classList.remove("show");
+    }
+
+    function addEmployeeRow() {
+      const newKey = "emp" + Date.now();
+      addEmployeeRowToModal(newKey, "");
+    }
+
+    function addEmployeeRowToModal(key, name) {
+      const list = $("employeeList");
+      const div = document.createElement("div");
+      div.className = "employee-item";
+      div.dataset.key = key;
+      div.innerHTML = `
+        <input type="text" value="${name}" placeholder="שם העובד">
+        <button class="btn-delete" onclick="this.parentElement.remove()">מחק</button>
+      `;
+      list.appendChild(div);
+    }
+
+    function saveEmployeesFromModal() {
+      const items = $("employeeList").querySelectorAll(".employee-item");
+      const newEmployees = {};
+      
+      items.forEach(item => {
+        const key = item.dataset.key;
+        const name = item.querySelector("input").value.trim();
+        if (name) {
+          newEmployees[key] = name;
+        }
+      });
+      
+      EMPLOYEES = newEmployees;
+      saveEmployees();
+      populateEmployeeSelect();
+      closeAdminModal();
+      
+      // עדכון שם המשתמש הנוכחי אם השתנה
+      if (EMPLOYEES[currentUser.key]) {
+        currentUser.name = EMPLOYEES[currentUser.key];
+        userName.textContent = currentUser.name;
+        localStorage.setItem("schedule_user", JSON.stringify(currentUser));
+      }
+      
+      loadWeekData();
+    }
+
+    // ========== עזר ==========
+    function showStatus(type, text) {
+      statusEl.textContent = text;
+      statusEl.className = "status " + type;
+      
+      setTimeout(() => {
+        statusEl.className = "status";
+      }, 3000);
+    }
+
+    // ========== הורדת תמונה ==========
+    async function downloadAsImage() {
+      if (typeof html2canvas === 'undefined') {
+        alert("טוען... נסה שוב בעוד שנייה");
+        return;
+      }
+      
+      showStatus("saving", "מכין תמונה...");
+      
+      const weekKey = getWeekKey(currentWeekOffset);
+      const weekData = getWeekData(weekKey);
+      const dates = getWeekDates(currentWeekOffset);
+      
+      // יצירת container
+      const container = document.createElement("div");
+      container.style.cssText = "position: fixed; top: -9999px; left: -9999px; background: white; padding: 20px; border-radius: 15px; direction: rtl; font-family: Arial, sans-serif; min-width: 400px;";
+      
+      // כותרת
+      const title = document.createElement("div");
+      title.style.cssText = "text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #2c3e50;";
+      title.textContent = "📅 סידור עבודה - " + weekTitle.textContent;
+      container.appendChild(title);
+      
+      // מקרא
+      const legend = document.createElement("div");
+      legend.style.cssText = "display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;";
+      legend.innerHTML = `
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:20px;background:#2196f3;border-radius:5px;display:inline-block;"></span> משרד</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:20px;background:#ff9800;border-radius:5px;display:inline-block;"></span> בית</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:20px;background:#4caf50;border-radius:5px;display:inline-block;"></span> חופש</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:20px;background:#9c27b0;border-radius:5px;display:inline-block;"></span> אחר</span>
+      `;
+      container.appendChild(legend);
+      
+      // טבלה
+      const table = document.createElement("table");
+      table.style.cssText = "width: 100%; border-collapse: collapse;";
+      
+      // Header
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      ["עובד", "א'", "ב'", "ג'", "ד'", "ה'"].forEach((h, i) => {
+        const th = document.createElement("th");
+        th.style.cssText = "background: #667eea; color: white; padding: 10px; border: 1px solid #ddd;";
+        if (i > 0) {
+          th.innerHTML = h + "<br><small>" + formatDate(dates[i-1]) + "</small>";
+        } else {
+          th.textContent = h;
+        }
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      
+      // Body
+      const tbody = document.createElement("tbody");
+      Object.keys(EMPLOYEES).forEach(empKey => {
+        const tr = document.createElement("tr");
+        
+        const tdName = document.createElement("td");
+        tdName.textContent = EMPLOYEES[empKey];
+        tdName.style.cssText = "font-weight: bold; padding: 10px; border: 1px solid #ddd; background: #f8f9fa;";
+        tr.appendChild(tdName);
+        
+        DAYS.forEach(day => {
+          const td = document.createElement("td");
+          td.style.cssText = "padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;";
+          
+          const value = (weekData[empKey] && weekData[empKey][day]) || "";
+          const otherText = (weekData[empKey] && weekData[empKey][day + "_other"]) || "";
+          
+          if (value === "office") {
+            td.style.background = "#2196f3";
+            td.style.color = "white";
+          } else if (value === "home") {
+            td.style.background = "#ff9800";
+            td.style.color = "white";
+          } else if (value === "vacation") {
+            td.style.background = "#4caf50";
+            td.style.color = "white";
+          } else if (value === "other") {
+            td.style.background = "#9c27b0";
+            td.style.color = "white";
+            td.textContent = otherText || "אחר";
+          } else {
+            td.style.background = "#e0e0e0";
+            td.style.color = "#999";
+          }
+          
+          tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+      });
+      
+      table.appendChild(tbody);
+      container.appendChild(table);
+      
+      // Footer
+      const footer = document.createElement("div");
+      footer.style.cssText = "text-align: center; font-size: 12px; color: #7f8c8d; margin-top: 15px;";
+      footer.textContent = "הופק: " + new Date().toLocaleDateString("he-IL") + " " + new Date().toLocaleTimeString("he-IL");
+      container.appendChild(footer);
+      
+      document.body.appendChild(container);
+      
+      try {
+        const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+        const link = document.createElement("a");
+        link.download = "סידור_עבודה_" + weekKey.replace(/-/g, "_") + ".png";
+        link.href = canvas.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showStatus("saved", "התמונה הורדה ✓");
+      } catch (e) {
+        console.error(e);
+        showStatus("error", "שגיאה בהורדת התמונה");
+      }
+      
+      document.body.removeChild(container);
+    }
+
+    // ========== התחלה ==========
+    init();
+  </script>
+</body>
+</html>
