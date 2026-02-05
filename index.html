@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -44,7 +43,7 @@
 
     .app-container { display: none; max-width: 900px; margin: 0 auto; }
     .app-container.active { display: block; }
-
+    
     .header {
       background: white; border-radius: 15px; padding: 15px 20px;
       margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -91,7 +90,7 @@
     .legend-color {
       width: 20px; height: 20px; border-radius: 5px;
     }
-
+    
     .employee-row {
       background: #f8f9fa;
       border: 1px solid #ecf0f1;
@@ -115,7 +114,9 @@
       gap: 4px;
       padding: 8px;
     }
-    .day-cell { text-align: center; }
+    .day-cell {
+      text-align: center;
+    }
     .day-label {
       font-size: 10px;
       color: #666;
@@ -139,8 +140,11 @@
     .day-select.home { background-color: #ff9800; color: white; }
     .day-select.vacation { background-color: #4caf50; color: white; }
     .day-select.other { background-color: #9c27b0; color: white; }
-
-    .note-row { padding: 8px; border-top: 1px dashed #ddd; }
+    
+    .note-row {
+      padding: 8px;
+      border-top: 1px dashed #ddd;
+    }
     .note-input {
       width: 100%;
       padding: 10px;
@@ -150,7 +154,10 @@
       text-align: right;
       background: #f3e5f5;
     }
-    .note-input:disabled { background: #f5f5f5; opacity: 0.8; }
+    .note-input:disabled {
+      background: #f5f5f5;
+      opacity: 0.8;
+    }
 
     .status {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -199,10 +206,11 @@
 </head>
 <body>
 
+  <!-- Login Screen -->
   <div class="login-container" id="loginScreen">
     <h1>📅 סידור עבודה</h1>
     <p class="subtitle">בחר את שמך כדי להיכנס</p>
-
+    
     <div class="form-group">
       <label>שם העובד:</label>
       <select id="employeeSelect">
@@ -224,6 +232,7 @@
     <p class="error-msg" id="errorMsg">סיסמה שגויה</p>
   </div>
 
+  <!-- Main App -->
   <div class="app-container" id="appContainer">
     <div class="header">
       <div class="header-top">
@@ -255,8 +264,10 @@
     </div>
   </div>
 
+  <!-- Status -->
   <div class="status" id="status"></div>
 
+  <!-- Loading -->
   <div class="loading" id="loading">
     <div class="loading-box">
       <div class="spinner"></div>
@@ -264,6 +275,7 @@
     </div>
   </div>
 
+  <!-- Admin Modal -->
   <div class="modal" id="adminModal">
     <div class="modal-content">
       <h2>ניהול עובדים</h2>
@@ -278,20 +290,24 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
+    // ========== הגדרות ==========
     const API_URL = "https://script.google.com/macros/s/AKfycbzSjz05OGJVubrk7upN5kAjYwCNK-UKJ33qgvQQY7IyqIy5c1k4OJ-SxrLonj058T4Mlg/exec";
-
-    const PASSWORDS = { manager: "1234", admin: "admin123" };
+    
+    const PASSWORDS = {
+      manager: "1234",
+      admin: "admin123"
+    };
 
     const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday"];
     const DAY_NAMES = ["א'", "ב'", "ג'", "ד'", "ה'"];
 
+    // ========== משתנים גלובליים ==========
     let currentUser = null;
     let currentWeekOffset = 0;
     let EMPLOYEES = {};
     let weekData = {};
 
-    let autoRefreshTimer = null;
-
+    // ========== אלמנטים ==========
     const $ = id => document.getElementById(id);
     const loginScreen = $("loginScreen");
     const appContainer = $("appContainer");
@@ -312,9 +328,12 @@
     const downloadImageBtn = $("downloadImageBtn");
     const adminModal = $("adminModal");
 
+    // ========== אתחול ==========
     async function init() {
+      // טעינת עובדים מהשרת
       await loadEmployeesFromServer();
-
+      
+      // בדיקה אם יש משתמש שמור
       const saved = localStorage.getItem("schedule_user");
       if (saved) {
         try {
@@ -329,6 +348,7 @@
         }
       }
 
+      // אירועים
       isManagerCheck.addEventListener("change", () => {
         passwordField.classList.toggle("show", isManagerCheck.checked);
         errorMsg.style.display = "none";
@@ -345,14 +365,18 @@
       $("addEmployeeBtn").addEventListener("click", addEmployeeRow);
     }
 
+    // ========== טעינת עובדים מהשרת ==========
     async function loadEmployeesFromServer() {
       try {
-        const response = await fetch(`${API_URL}?action=loadEmployees&ts=${Date.now()}`, { cache: "no-store" });
+        const response = await fetch(`${API_URL}?action=loadEmployees&ts=${Date.now()}`);
         const data = await response.json();
+        
         if (data.success && data.employees) {
           EMPLOYEES = data.employees;
         }
       } catch (e) {
+        console.log("Failed to load employees from server");
+        // ברירת מחדל
         EMPLOYEES = {
           emp1: "יוסי מזרחי",
           emp2: "מיכל דהן",
@@ -361,6 +385,7 @@
           emp5: "עומר גולן"
         };
       }
+      
       populateEmployeeSelect();
     }
 
@@ -376,45 +401,36 @@
       loginBtn.textContent = "כניסה למערכת";
     }
 
+    // ========== התחברות ==========
     function handleLogin() {
       const empKey = employeeSelect.value;
-      if (!empKey) { alert("יש לבחור עובד"); return; }
-
-      let role = "employee";
-      if (isManagerCheck.checked) {
-        const pwd = passwordInput.value;
-        if (pwd === PASSWORDS.admin) role = "admin";
-        else if (pwd === PASSWORDS.manager) role = "manager";
-        else { errorMsg.style.display = "block"; return; }
+      if (!empKey) {
+        alert("יש לבחור עובד");
+        return;
       }
 
-      currentUser = { key: empKey, name: EMPLOYEES[empKey], role };
+      let role = "employee";
+      
+      if (isManagerCheck.checked) {
+        const pwd = passwordInput.value;
+        if (pwd === PASSWORDS.admin) {
+          role = "admin";
+        } else if (pwd === PASSWORDS.manager) {
+          role = "manager";
+        } else {
+          errorMsg.style.display = "block";
+          return;
+        }
+      }
+
+      currentUser = { key: empKey, name: EMPLOYEES[empKey], role: role };
       localStorage.setItem("schedule_user", JSON.stringify(currentUser));
       showApp();
     }
 
-    function stopAutoRefresh() {
-      if (autoRefreshTimer) {
-        clearInterval(autoRefreshTimer);
-        autoRefreshTimer = null;
-      }
-    }
-
-    function startAutoRefresh() {
-      stopAutoRefresh();
-      autoRefreshTimer = setInterval(() => {
-        if (currentUser) {
-          loadWeekData(true);
-        }
-      }, 10000);
-    }
-
     function handleLogout() {
-      stopAutoRefresh();
-
       localStorage.removeItem("schedule_user");
       currentUser = null;
-
       loginScreen.style.display = "block";
       appContainer.classList.remove("active");
       employeeSelect.value = "";
@@ -427,9 +443,9 @@
     function showApp() {
       loginScreen.style.display = "none";
       appContainer.classList.add("active");
-
+      
       userName.textContent = currentUser.name;
-
+      
       if (currentUser.role === "admin") {
         userBadge.textContent = "מנהל מערכת";
         userBadge.className = "user-badge admin";
@@ -445,10 +461,10 @@
       }
 
       updateWeekDisplay();
-      loadWeekData(false);
-      startAutoRefresh();
+      loadWeekData();
     }
 
+    // ========== ניווט שבועות ==========
     function getWeekDates(offset) {
       const today = new Date();
       const sunday = new Date(today);
@@ -476,34 +492,39 @@
       const dates = getWeekDates(currentWeekOffset);
       const start = formatDate(dates[0]);
       const end = formatDate(dates[4]);
-
+      
       let title = `${start} - ${end}`;
       if (currentWeekOffset === 0) title = `השבוע הנוכחי (${title})`;
       else if (currentWeekOffset === 1) title = `שבוע הבא (${title})`;
       else if (currentWeekOffset === -1) title = `שבוע שעבר (${title})`;
-
+      
       weekTitle.textContent = title;
     }
 
     function changeWeek(delta) {
       currentWeekOffset += delta;
       updateWeekDisplay();
-      loadWeekData(false);
+      loadWeekData();
     }
 
-    async function loadWeekData(silent) {
-      if (!silent) showLoading(true);
-
+    // ========== טעינת נתונים ==========
+    async function loadWeekData() {
+      showLoading(true);
+      
       const weekKey = getWeekKey(currentWeekOffset);
       weekData = {};
-
-      Object.keys(EMPLOYEES).forEach(empKey => { weekData[empKey] = {}; });
-
+      
+      // אתחול ריק לכל העובדים
+      Object.keys(EMPLOYEES).forEach(empKey => {
+        weekData[empKey] = {};
+      });
+      
       try {
-        const url = `${API_URL}?action=loadWeek&week_key=${encodeURIComponent(weekKey)}&ts=${Date.now()}`;
-        const response = await fetch(url, { cache: "no-store" });
-        const data = await response.json();
+        
+        const response = await fetch(`${API_URL}?action=loadWeek&week_key=${encodeURIComponent(weekKey)}&ts=${Date.now()}`);
 
+        const data = await response.json();
+        
         if (data.success && data.requests) {
           data.requests.forEach(req => {
             const empKey = req.employee_key;
@@ -515,61 +536,70 @@
           });
         }
       } catch (e) {
-        if (!silent) showStatus("error", "שגיאה בטעינת נתונים");
+        console.log("Failed to load week data");
+        showStatus("error", "שגיאה בטעינת נתונים");
       }
-
+      
       renderTable();
-      if (!silent) showLoading(false);
+      showLoading(false);
     }
 
+    // ========== רינדור טבלה ==========
     function renderTable() {
       const container = scheduleBody;
       container.innerHTML = "";
-
+      
       const dates = getWeekDates(currentWeekOffset);
-
+      
       Object.keys(EMPLOYEES).forEach(empKey => {
         const row = document.createElement("div");
         row.className = "employee-row";
-        if (currentUser && empKey === currentUser.key) row.classList.add("is-me");
-
+        if (empKey === currentUser.key) {
+          row.classList.add("is-me");
+        }
+        
+        // שם העובד
         const header = document.createElement("div");
         header.className = "employee-header";
-        header.textContent = EMPLOYEES[empKey] + (currentUser && empKey === currentUser.key ? " (אני)" : "");
+        header.textContent = EMPLOYEES[empKey] + (empKey === currentUser.key ? " (אני)" : "");
         row.appendChild(header);
-
+        
+        // ימים
         const daysContainer = document.createElement("div");
         daysContainer.className = "employee-days";
-
+        
         let hasOther = false;
         let otherDayIdx = -1;
         let otherText = "";
-
+        
         DAYS.forEach((day, idx) => {
           const dayCell = document.createElement("div");
           dayCell.className = "day-cell";
           dayCell.dataset.dayIdx = idx;
-
+          
+          // תווית יום
           const dayLabel = document.createElement("div");
           dayLabel.className = "day-label";
           dayLabel.textContent = DAY_NAMES[idx] + " " + formatDate(dates[idx]);
           dayCell.appendChild(dayLabel);
-
+          
+          // בחירה
           const select = document.createElement("select");
           select.className = "day-select";
           select.dataset.emp = empKey;
           select.dataset.day = day;
-
+          
           const currentValue = (weekData[empKey] && weekData[empKey][day]) || "";
           const currentOther = (weekData[empKey] && weekData[empKey][day + "_other"]) || "";
-          const isOwnRow = currentUser && empKey === currentUser.key;
+          const isOwnRow = empKey === currentUser.key;
           const isEmpty = currentValue === "";
-
-          const canEdit = (currentUser && (currentUser.role === "admin" || currentUser.role === "manager")) ||
+          
+          const canEdit = currentUser.role === "admin" || 
+                          currentUser.role === "manager" || 
                           (isOwnRow && isEmpty);
-
+          
           select.disabled = !canEdit;
-
+          
           const options = [
             { value: "", label: "—", cls: "empty" },
             { value: "office", label: "משרד", cls: "office" },
@@ -577,38 +607,42 @@
             { value: "vacation", label: "חופש", cls: "vacation" },
             { value: "other", label: "אחר", cls: "other" }
           ];
-
+          
           options.forEach(opt => {
             const o = document.createElement("option");
             o.value = opt.value;
             o.textContent = opt.label;
             select.appendChild(o);
           });
-
+          
           select.value = currentValue;
           select.classList.add(options.find(o => o.value === currentValue)?.cls || "empty");
-
+          
           select.addEventListener("change", (e) => handleCellChange(e, empKey, day, row, canEdit));
-
+          
           dayCell.appendChild(select);
           daysContainer.appendChild(dayCell);
-
+          
+          // בדיקה אם יש "אחר"
           if (currentValue === "other") {
             hasOther = true;
             otherDayIdx = idx;
             otherText = currentOther;
           }
         });
-
+        
         row.appendChild(daysContainer);
-
+        
+        // שורת הערה אם יש "אחר"
         if (hasOther) {
           const noteRow = document.createElement("div");
           noteRow.className = "note-row";
-
-          const isOwnRow = currentUser && empKey === currentUser.key;
-          const canEdit = currentUser && (currentUser.role === "admin" || currentUser.role === "manager" || isOwnRow);
-
+          
+          const isOwnRow = empKey === currentUser.key;
+          const canEdit = currentUser.role === "admin" || 
+                          currentUser.role === "manager" || 
+                          isOwnRow;
+          
           const noteInput = document.createElement("input");
           noteInput.type = "text";
           noteInput.className = "note-input";
@@ -618,31 +652,38 @@
           noteInput.dataset.emp = empKey;
           noteInput.dataset.day = DAYS[otherDayIdx];
           noteInput.addEventListener("blur", (e) => handleOtherChange(e, empKey, DAYS[otherDayIdx]));
-
+          
           noteRow.appendChild(noteInput);
           row.appendChild(noteRow);
         }
-
+        
         container.appendChild(row);
       });
     }
 
+    // ========== שמירת תא ==========
     async function handleCellChange(e, empKey, day, employeeRow, canEdit) {
       const select = e.target;
       const value = select.value;
-
+      const weekKey = getWeekKey(currentWeekOffset);
+      
+      // עדכון צבע
       select.className = "day-select " + (value ? value : "empty");
-
+      
+      // עדכון מקומי
       if (!weekData[empKey]) weekData[empKey] = {};
       weekData[empKey][day] = value;
-
-      if (value !== "other") weekData[empKey][day + "_other"] = "";
-
+      
+      if (value !== "other") {
+        weekData[empKey][day + "_other"] = "";
+      }
+      
+      // רענון שורת ההערה
       const existingNote = employeeRow.querySelector(".note-row");
       if (value === "other" && !existingNote) {
         const noteRow = document.createElement("div");
         noteRow.className = "note-row";
-
+        
         const noteInput = document.createElement("input");
         noteInput.type = "text";
         noteInput.className = "note-input";
@@ -651,34 +692,41 @@
         noteInput.dataset.emp = empKey;
         noteInput.dataset.day = day;
         noteInput.addEventListener("blur", (e) => handleOtherChange(e, empKey, day));
-
+        
         noteRow.appendChild(noteInput);
         employeeRow.appendChild(noteRow);
         noteInput.focus();
       } else if (value !== "other" && existingNote) {
         let stillHasOther = false;
-        DAYS.forEach(d => { if (weekData[empKey][d] === "other") stillHasOther = true; });
-        if (!stillHasOther) existingNote.remove();
+        DAYS.forEach(d => {
+          if (weekData[empKey][d] === "other") stillHasOther = true;
+        });
+        if (!stillHasOther) {
+          existingNote.remove();
+        }
       }
-
+      
       showStatus("saving", "שומר...");
+      
+      // שמירה לשרת
       await saveToServer(empKey, day, value, weekData[empKey][day + "_other"] || "");
     }
-
+    
     async function handleOtherChange(e, empKey, day) {
       const input = e.target;
       const value = input.value;
-
+      
       if (!weekData[empKey]) weekData[empKey] = {};
       weekData[empKey][day + "_other"] = value;
-
+      
       showStatus("saving", "שומר...");
+      
       await saveToServer(empKey, day, weekData[empKey][day], value);
     }
-
+    
     async function saveToServer(empKey, day, choiceValue, choiceOther) {
       const weekKey = getWeekKey(currentWeekOffset);
-
+      
       try {
         const payload = {
           employee_key: empKey,
@@ -690,20 +738,16 @@
           updated_by: currentUser.key,
           updated_by_name: currentUser.name
         };
-
-        const response = await fetch(`${API_URL}?action=upsertCell&ts=${Date.now()}`, {
+        
+        const response = await fetch(`${API_URL}?action=upsertCell`, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload),
-          cache: "no-store"
+          body: JSON.stringify(payload)
         });
-
+        
         const data = await response.json();
         if (data.success) {
           showStatus("saved", "נשמר ✓");
-
-          // חשוב: מיד אחרי שמירה מוצלחת, נטען מחדש מהשרת כדי שכל מכשיר יראה אותו הדבר
-          await loadWeekData(true);
         } else {
           showStatus("error", "שגיאה בשמירה");
         }
@@ -712,11 +756,15 @@
       }
     }
 
+    // ========== Admin Modal ==========
     function openAdminModal() {
       const list = $("employeeList");
       list.innerHTML = "";
-
-      Object.keys(EMPLOYEES).forEach(key => { addEmployeeRowToModal(key, EMPLOYEES[key]); });
+      
+      Object.keys(EMPLOYEES).forEach(key => {
+        addEmployeeRowToModal(key, EMPLOYEES[key]);
+      });
+      
       adminModal.classList.add("show");
     }
 
@@ -744,36 +792,37 @@
     async function saveEmployeesToServer() {
       const items = $("employeeList").querySelectorAll(".employee-item");
       const newEmployees = {};
-
+      
       items.forEach(item => {
         const key = item.dataset.key;
         const name = item.querySelector("input").value.trim();
-        if (name) newEmployees[key] = name;
+        if (name) {
+          newEmployees[key] = name;
+        }
       });
-
+      
       showStatus("saving", "שומר...");
-
+      
       try {
-        const response = await fetch(`${API_URL}?action=saveEmployees&ts=${Date.now()}`, {
+        const response = await fetch(`${API_URL}?action=saveEmployees`, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ employees: newEmployees }),
-          cache: "no-store"
+          body: JSON.stringify({ employees: newEmployees })
         });
-
+        
         const data = await response.json();
         if (data.success) {
           EMPLOYEES = newEmployees;
           populateEmployeeSelect();
           closeAdminModal();
-
+          
           if (EMPLOYEES[currentUser.key]) {
             currentUser.name = EMPLOYEES[currentUser.key];
             userName.textContent = currentUser.name;
             localStorage.setItem("schedule_user", JSON.stringify(currentUser));
           }
-
-          await loadWeekData(false);
+          
+          loadWeekData();
           showStatus("saved", "נשמר ✓");
         } else {
           showStatus("error", "שגיאה בשמירה");
@@ -783,38 +832,42 @@
       }
     }
 
+    // ========== עזר ==========
     function showStatus(type, text) {
       statusEl.textContent = text;
       statusEl.className = "status " + type;
-
+      
       if (type !== "saving") {
-        setTimeout(() => { statusEl.className = "status"; }, 3000);
+        setTimeout(() => {
+          statusEl.className = "status";
+        }, 3000);
       }
     }
-
+    
     function showLoading(show) {
       loadingEl.classList.toggle("show", show);
     }
 
+    // ========== הורדת תמונה ==========
     async function downloadAsImage() {
-      if (typeof html2canvas === "undefined") {
+      if (typeof html2canvas === 'undefined') {
         alert("טוען... נסה שוב בעוד שנייה");
         return;
       }
-
+      
       showStatus("saving", "מכין תמונה...");
-
+      
       const weekKey = getWeekKey(currentWeekOffset);
       const dates = getWeekDates(currentWeekOffset);
-
+      
       const container = document.createElement("div");
       container.style.cssText = "position: fixed; top: -9999px; left: -9999px; background: white; padding: 20px; border-radius: 15px; direction: rtl; font-family: Arial, sans-serif; min-width: 400px;";
-
+      
       const title = document.createElement("div");
       title.style.cssText = "text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #2c3e50;";
       title.textContent = "📅 סידור עבודה - " + weekTitle.textContent;
       container.appendChild(title);
-
+      
       const legend = document.createElement("div");
       legend.style.cssText = "display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;";
       legend.innerHTML = `
@@ -824,60 +877,75 @@
         <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:20px;background:#9c27b0;border-radius:5px;display:inline-block;"></span> אחר</span>
       `;
       container.appendChild(legend);
-
+      
       const table = document.createElement("table");
       table.style.cssText = "width: 100%; border-collapse: collapse;";
-
+      
       const thead = document.createElement("thead");
       const headerRow = document.createElement("tr");
       ["עובד", "א'", "ב'", "ג'", "ד'", "ה'"].forEach((h, i) => {
         const th = document.createElement("th");
         th.style.cssText = "background: #667eea; color: white; padding: 10px; border: 1px solid #ddd;";
-        if (i > 0) th.innerHTML = h + "<br><small>" + formatDate(dates[i-1]) + "</small>";
-        else th.textContent = h;
+        if (i > 0) {
+          th.innerHTML = h + "<br><small>" + formatDate(dates[i-1]) + "</small>";
+        } else {
+          th.textContent = h;
+        }
         headerRow.appendChild(th);
       });
       thead.appendChild(headerRow);
       table.appendChild(thead);
-
+      
       const tbody = document.createElement("tbody");
       Object.keys(EMPLOYEES).forEach(empKey => {
         const tr = document.createElement("tr");
-
+        
         const tdName = document.createElement("td");
         tdName.textContent = EMPLOYEES[empKey];
         tdName.style.cssText = "font-weight: bold; padding: 10px; border: 1px solid #ddd; background: #f8f9fa;";
         tr.appendChild(tdName);
-
+        
         DAYS.forEach(day => {
           const td = document.createElement("td");
           td.style.cssText = "padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;";
-
+          
           const value = (weekData[empKey] && weekData[empKey][day]) || "";
           const otherText = (weekData[empKey] && weekData[empKey][day + "_other"]) || "";
-
-          if (value === "office") { td.style.background = "#2196f3"; td.style.color = "white"; }
-          else if (value === "home") { td.style.background = "#ff9800"; td.style.color = "white"; }
-          else if (value === "vacation") { td.style.background = "#4caf50"; td.style.color = "white"; }
-          else if (value === "other") { td.style.background = "#9c27b0"; td.style.color = "white"; td.textContent = otherText || "אחר"; }
-          else { td.style.background = "#e0e0e0"; td.style.color = "#999"; }
-
+          
+          if (value === "office") {
+            td.style.background = "#2196f3";
+            td.style.color = "white";
+          } else if (value === "home") {
+            td.style.background = "#ff9800";
+            td.style.color = "white";
+          } else if (value === "vacation") {
+            td.style.background = "#4caf50";
+            td.style.color = "white";
+          } else if (value === "other") {
+            td.style.background = "#9c27b0";
+            td.style.color = "white";
+            td.textContent = otherText || "אחר";
+          } else {
+            td.style.background = "#e0e0e0";
+            td.style.color = "#999";
+          }
+          
           tr.appendChild(td);
         });
-
+        
         tbody.appendChild(tr);
       });
-
+      
       table.appendChild(tbody);
       container.appendChild(table);
-
+      
       const footer = document.createElement("div");
       footer.style.cssText = "text-align: center; font-size: 12px; color: #7f8c8d; margin-top: 15px;";
       footer.textContent = "הופק: " + new Date().toLocaleDateString("he-IL") + " " + new Date().toLocaleTimeString("he-IL");
       container.appendChild(footer);
-
+      
       document.body.appendChild(container);
-
+      
       try {
         const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
         const link = document.createElement("a");
@@ -888,14 +956,15 @@
         document.body.removeChild(link);
         showStatus("saved", "התמונה הורדה ✓");
       } catch (e) {
+        console.error(e);
         showStatus("error", "שגיאה בהורדת התמונה");
       }
-
+      
       document.body.removeChild(container);
     }
 
+    // ========== התחלה ==========
     init();
   </script>
 </body>
 </html>
-```
