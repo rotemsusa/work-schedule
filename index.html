@@ -368,7 +368,7 @@
     // ========== טעינת עובדים מהשרת ==========
     async function loadEmployeesFromServer() {
       try {
-        const response = await fetch(`${API_URL}?action=loadEmployees`);
+        const response = await fetch(`${API_URL}?action=loadEmployees&ts=${Date.now()}`);
         const data = await response.json();
         
         if (data.success && data.employees) {
@@ -520,7 +520,7 @@
       });
       
       try {
-        const response = await fetch(`${API_URL}?action=loadWeek&week_key=${encodeURIComponent(weekKey)}`);
+        const response = await fetch(`${API_URL}?action=loadWeek&week_key=${encodeURIComponent(weekKey)&ts=${Date.now()}`);
         const data = await response.json();
         
         if (data.success && data.requests) {
